@@ -1,0 +1,33 @@
+package com.Service.Goals.Users.Repository;
+
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.Service.Goals.Users.Entity.Quarter;
+import com.Service.Goals.Users.Entity.User;
+import com.Service.Goals.Users.Entity.UserDetails;
+
+@Repository
+public interface UserRepository extends JpaRepository<UserDetails,Long>{
+
+	@Query(value = "SELECT * FROM USERS WHERE email_id= ?1", nativeQuery = true)
+	UserDetails findbyemailsingle(String email);
+	
+	@Query(value = "SELECT u.email_id,u.username,r.rolename FROM users u JOIN user_role_mapping g ON u.user_id =g.user_id JOIN role r ON g.role_id =r.role_id WHERE u.email_id =?1", nativeQuery = true)
+	UserDetails findbyemail(String email);
+	
+	@Query(value="Select * from Users where domain_id = ?1 and rm_id=?2", nativeQuery = true)
+	List<UserDetails> getuserdetails(String domainid,String rm_id);
+	
+}
+
+
+
+

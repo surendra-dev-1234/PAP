@@ -1,0 +1,30 @@
+package com.Service.Goals.Users.Entity;
+
+import javax.persistence.Column;
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class QuarterA {
+	
+	private String start_month;
+	
+	private String weight_Freeze_Month;
+
+	public String getStart_month() {
+		return start_month;
+	}
+
+	public void setStart_month(String start_month) {
+		this.start_month = start_month;
+	}
+
+	public String getWeight_Freeze_Month() {
+		return weight_Freeze_Month;
+	}
+
+	public void setWeight_Freeze_Month(String weight_Freeze_Month) {
+		this.weight_Freeze_Month = weight_Freeze_Month;
+	}
+}
+

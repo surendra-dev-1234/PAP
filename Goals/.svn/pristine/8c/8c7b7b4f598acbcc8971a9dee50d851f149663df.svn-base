@@ -1,0 +1,153 @@
+package com.Service.Goals.Users.Entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.NamedNativeQueries;
+import javax.persistence.NamedNativeQuery;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="users")
+@NamedNativeQueries({
+    @NamedNativeQuery(
+    name = "call usp_userinsert",
+    query = "call usp_userinsert"
+    )
+})
+public class UserDetails {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name="user_id")
+	private Long user_id;
+	
+	@Column(name="email_id")
+	private String email_id;
+	
+	@Column(name="username")
+	private String username;
+	
+	@Column(name="rm_id")
+	private String rm_id;
+	
+	@Column(name="rm_valid_from")
+	private String rm_valid_from;
+	
+	@Column(name="rm_valid_to")
+	private String rm_valid_to;
+	
+	@Column(name="ped_id")
+	private String ped_id;
+	
+	@Column(name="ped_valid_from")
+	private String ped_valid_from;
+	
+	@Column(name="ped_valid_to")
+	private String ped_valid_to;
+	
+	@Column(name="domain_id")
+	private String domain_id;
+
+	@Column(name="Emp_Id")
+	private String  emp_Id;
+	
+	@Column(name="Flag")
+	private String  flag;
+	
+	public Long getUser_id() {
+		return user_id;
+	}
+	
+	public String getEmail_id() {
+		return email_id;
+	}
+
+	public void setEmail_id(String email_id) {
+		this.email_id = email_id;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getRm_id() {
+		return rm_id;
+	}
+
+	public void setRm_id(String rm_id) {
+		this.rm_id = rm_id;
+	}
+
+	public String getRm_valid_from() {
+		return rm_valid_from;
+	}
+
+	public void setRm_valid_from(String rm_valid_from) {
+		this.rm_valid_from = rm_valid_from;
+	}
+
+	public String getRm_valid_to() {
+		return rm_valid_to;
+	}
+
+	public void setRm_valid_to(String rm_valid_to) {
+		this.rm_valid_to = rm_valid_to;
+	}
+
+	public String getPed_id() {
+		return ped_id;
+	}
+
+	public void setPed_id(String ped_id) {
+		this.ped_id = ped_id;
+	}
+
+	public String getPed_valid_from() {
+		return ped_valid_from;
+	}
+
+	public void setPed_valid_from(String ped_valid_from) {
+		this.ped_valid_from = ped_valid_from;
+	}
+
+	public String getPed_valid_to() {
+		return ped_valid_to;
+	}
+
+	public void setPed_valid_to(String ped_valid_to) {
+		this.ped_valid_to = ped_valid_to;
+	}
+
+	public String getDomain_id() {
+		return domain_id;
+	}
+
+	public void setDomain_id(String domain_id) {
+		this.domain_id = domain_id;
+	}
+
+	public String getEmp_Id() {
+		return emp_Id;
+	}
+
+	public void setEmp_Id(String emp_Id) {
+		this.emp_Id = emp_Id;
+	}
+
+	public String getFlag() {
+		return flag;
+	}
+
+	public void setFlag(String flag) {
+		this.flag = flag;
+	}
+	
+	
+}

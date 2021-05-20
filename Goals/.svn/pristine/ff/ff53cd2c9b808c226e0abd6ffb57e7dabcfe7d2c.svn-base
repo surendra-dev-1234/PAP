@@ -1,0 +1,51 @@
+#jwt.secret=java
+spring.datasource.driverClassName=com.microsoft.sqlserver.jdbc.SQLServerDriver
+spring.datasource.url=jdbc:sqlserver://15.207.231.163;databaseName=PerformanceAppraisal_Dev
+spring.datasource.username=sa
+spring.datasource.password=Indxx@1234
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql = true
+
+
+server.port=8227
+## Hibernate Properties
+# The SQL dialect makes Hibernate generate better SQL for the chosen database
+spring.jpa.properties.hibernate.dialect = org.hibernate.dialect.SQLServer2012Dialect
+
+# Hibernate ddl auto (create, create-drop, validate, update)
+spring.jpa.hibernate.ddl-auto = update
+
+server.error.include-stacktrace=never
+server.error.include-message = always
+
+spring.jackson.deserialization.accept-single-value-as-array=true 
+
+spring.servlet.multipart.max-file-size=2MB
+spring.servlet.multipart.max-request-size=2MB
+
+# Specifies your Active Directory ID:
+azure.activedirectory.tenant-id=73cb9ffb-f050-4eab-90a7-46d731bd9bfd
+# Specifies your App Registration's Application ID:
+azure.activedirectory.client-id=b83e571c-8060-49e2-9be7-c8544b17d306
+# Specifies your App Registration's secret key:
+azure.activedirectory.client-secret=82B2v29~..Ygw0YDlDUr8o.d8COYp~sdG5
+# Specifies the list of Active Directory groups to use for authorization:
+azure.activedirectory.user-group.allowed-groups=Quantira2
+azure.activedirectory.scopes= User.Read,MailboxSettings.Read,Calendars.ReadWrite
+#server.ssl.key-store-type=PKCS12
+#server.ssl.key-store=classpath:keystore.p12
+#server.ssl.key-store-password=password
+#server.ssl.key-alias=testCert
+
+
+default.string=false
+default.int=0
+
+client.url1=http://localhost:3000
+client.url2=http://localhost:4200
+client.url3=http://15.207.231.163:4200
+client.url4=http://localhost:3005
+client.url5=http://15.206.224.193:3005
+client.url6=""
+
+client.url=url1,url2

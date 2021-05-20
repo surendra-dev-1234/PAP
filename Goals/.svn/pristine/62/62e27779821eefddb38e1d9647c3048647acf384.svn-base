@@ -1,0 +1,16 @@
+package com.Service.Goals.Users.Repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import com.Service.Goals.Users.Entity.Quarter;
+
+@Repository
+public interface QuartarRepository extends JpaRepository<Quarter, Long>{
+
+	@Query(value="Select * from Quarter where domain_id = ?1" , nativeQuery = true)
+	List<Quarter> getallquatars(String domainid);
+}

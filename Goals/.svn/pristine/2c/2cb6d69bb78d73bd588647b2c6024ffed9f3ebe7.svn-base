@@ -1,0 +1,5 @@
+package com.Service.Goals.DB.Config;
+
+public class ConfigUtil {
+
+}

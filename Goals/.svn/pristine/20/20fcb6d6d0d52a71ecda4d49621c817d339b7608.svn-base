@@ -1,0 +1,31 @@
+package com.Service.Goals.Users.Controller;
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class UserD {
+
+	private String email_id;
+	private String username;
+	private String name;
+
+	public String getEmail_id() {
+		return email_id;
+	}
+
+	public void setEmail_id(String email_id) {
+		this.email_id = email_id;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+}

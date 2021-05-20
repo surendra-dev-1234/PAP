@@ -1,0 +1,126 @@
+package com.Service.Goals.Users.Controller;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class UserD {
+
+	private String email_id;
+	
+	private String username;
+	
+	private String role_name;
+	
+	private String domain_name;
+	
+	@Value("false")
+	private String hr;
+	
+	@Value("false")
+	private String mis_user;
+	
+	@Value("false")
+	private String ped_user;
+	
+	@Value("false")
+	private String level1_user;
+	
+	@Value("false")
+	private String level2_user;
+	
+	@Value("false")
+	private String level3_user;
+	
+	@Value("false")
+    private String unfreeze;
+	
+	public String getRole_name() {
+		return role_name;
+	}
+
+	public void setRole_name(String role_name) {
+		this.role_name = role_name;
+	}
+
+	public String getDomain_name() {
+		return domain_name;
+	}
+
+	public void setDomain_name(String domain_name) {
+		this.domain_name = domain_name;
+	}
+
+	public String getEmail_id() {
+		return email_id;
+	}
+
+	public void setEmail_id(String email_id) {
+		this.email_id = email_id;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getHr() {
+		return hr;
+	}
+
+	public void setHr(String hr) {
+		this.hr = hr;
+	}
+
+	public String getMis_user() {
+		return mis_user;
+	}
+
+	public void setMis_user(String mis_user) {
+		this.mis_user = mis_user;
+	}
+
+	public String getPed_user() {
+		return ped_user;
+	}
+
+	public void setPed_user(String ped_user) {
+		this.ped_user = ped_user;
+	}
+
+	public String getLevel1_user() {
+		return level1_user;
+	}
+
+	public void setLevel1_user(String level1_user) {
+		this.level1_user = level1_user;
+	}
+
+	public String getLevel2_user() {
+		return level2_user;
+	}
+
+	public void setLevel2_user(String level2_user) {
+		this.level2_user = level2_user;
+	}
+
+	public String getLevel3_user() {
+		return level3_user;
+	}
+
+	public void setLevel3_user(String level3_user) {
+		this.level3_user = level3_user;
+	}
+
+	public String getUnfreeze() {
+		return unfreeze;
+	}
+
+	public void setUnfreeze(String unfreeze) {
+		this.unfreeze = unfreeze;
+	}
+
+}

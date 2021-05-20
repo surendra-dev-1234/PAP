@@ -1,0 +1,245 @@
+package com.Service.Goals.Users.Controller;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.StoredProcedureQuery;
+import javax.servlet.http.HttpServletResponse;
+import javax.websocket.server.PathParam;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.Service.Goals.Users.Entity.JdbcUserRepository;
+import com.Service.Goals.Users.Entity.Quarter;
+import com.Service.Goals.Users.Entity.User;
+import com.Service.Goals.Users.Entity.UserDetails;
+import com.Service.Goals.Users.Entity.UserScore;
+import com.Service.Goals.Users.PDF.UserPDFExporter.QuaterPDFExporter;
+import com.Service.Goals.Users.Repository.QuartarRepository;
+import com.Service.Goals.Users.Repository.UserRepository;
+import com.Service.Goals.Users.Repository.UserScoreRepository;
+import com.lowagie.text.DocumentException;
+
+@RestController
+@CrossOrigin(origins="http://localhost:3000") 
+public class SampleController {
+
+	//private static Object JdbcUserRepository;
+
+	@PersistenceContext
+	EntityManager em;
+
+	@Autowired
+	UserRepository repo;
+
+	@Autowired
+	QuartarRepository repo2;
+
+	@Autowired
+	JdbcUserRepository repo3;
+
+	@Autowired
+	UserScoreRepository repo4;
+
+	@GetMapping(value = "/getWithMultipleParameters")
+	public User getWithMultipleParameters(User userDTO, @RequestParam(value = "year") String year, @RequestParam(value = "quatar") String quatar) {
+		userDTO.setYear(year);
+		userDTO.getYear();
+		userDTO.setQuaTAR(quatar);
+		userDTO.getQuaTAR();
+		return userDTO;
+	}
+
+	@GetMapping("/user")
+	public User getuserdetails(@RequestParam("email") String email) {
+
+		User user= null;
+
+		String Email=email;
+		if(Email.equals("surendra@Quantira.com")) {
+			user= new User();
+			user.setHr("false");
+			String Hr=user.getHr();
+			user.setEmail(email);
+			user.setMis_user("false");
+			user.setPed_user("false");
+			user.setLevel1_user("false");
+			user.setLevel2_user("false");
+			user.setLevel3_user("true");
+		}
+		else if(Email.equals("monika@Quantira.com")) {
+			user= new User();
+			user.setHr("false");
+			user.setEmail(email);
+			user.setMis_user("false");
+			user.setPed_user("false");
+			user.setLevel1_user("false");
+			user.setLevel2_user("true");
+			user.setLevel3_user("false");
+		}
+		else if(Email.equals("vivek@Quantira.com")) {
+			user= new User();
+			user.setHr("false");
+			user.setEmail(email);
+			user.setMis_user("false");
+			user.setPed_user("true");
+			user.setLevel1_user("false");
+			user.setLevel2_user("false");
+			user.setLevel3_user("true");	
+		}
+		else{
+			user= new User();
+		}
+		return user;
+	}
+
+	@GetMapping("/all_users")
+	public List<User> getuserslist() {
+		User user1=new User(1,"sreddy@Quantira.com", "false", "false", "false", "false","false","true");
+		User user2=new User(2,"MonikaJ@quantira.com", "false", "false", "false", "false","true","false");
+		User user3=new User(3,"vivek@Quantira.com", "false", "false", "true", "false","false", "true");
+		List<User> userlist=new ArrayList<User>();
+		userlist.add(user1);
+		userlist.add(user2);
+		userlist.add(user3);
+		System.out.println(userlist);
+		return userlist;	
+	}
+	@GetMapping("/all/{email_id}")
+	public UserDetails getfindbyemail(@PathVariable("email_id") String email) {
+		return repo.findbyemailsingle(email);
+	}
+
+	@GetMapping("/getallquatars/{domain_id}")
+	public List<Quarter> getallquatars(@PathVariable("domain_id") String domain_id) {
+		return repo2.getallquatars(domain_id);
+	}
+
+	@GetMapping("allemployees/{domain_id}/{rm_id}")
+	public List<UserDetails> getallemployeesbyRMid(@PathVariable("domain_id") String domain_id,@PathVariable("rm_id") String rm_id) {
+		return repo.getallemployeesbyRMid(domain_id,rm_id);
+	}
+
+	@GetMapping("employee/{email_id}/{username}")
+	public UserD getemployeebyEmailid(@PathVariable("email_id") String email_id, @PathVariable(name="username", required = false) String username) {
+		UserD user=new UserD();
+		List<UserD> elist=repo3.getemployeebyEmailid(email_id,username);
+		String roleName="";
+		for(UserD u : elist)
+		{
+			user.setEmail_id(u.getEmail_id());
+			user.setUsername(u.getUsername());
+			roleName+=u.getRole_name()+",";
+			user.setRole_name(roleName);
+			user.setDomain_name(u.getDomain_name() );
+
+			if(u.getRole_name().equals("LEVEL3_USER")) {
+				user.setLevel3_user("true");
+			}
+
+			if(u.getRole_name().equals("LEVEL2_USER")) {
+				user.setLevel2_user("true");
+			}
+
+			if(u.getRole_name().equals("LEVEL1_USER")) {
+				user.setLevel1_user("true");
+			}
+
+			if(u.getRole_name().equals("HR")) {
+				user.setHr("true");
+			}
+			if(u.getRole_name().equals("MIS_USER")) {
+				user.setMis_user("true");;
+			}
+			if(u.getRole_name().equals("PED_USER")) {
+				user.setPed_user("true");
+			}
+			if(u.getRole_name().equals("UNFREEZE_USER")) {
+				user.setUnfreeze("true");
+			}
+
+
+		}
+		return user;
+	}
+
+	@GetMapping("/quaters/export/pdf/{domain_id}")
+	public void exportToPDF(HttpServletResponse response,@PathVariable("domain_id") String domain_id) throws DocumentException, IOException {
+
+		response.setContentType("application/pdf");
+
+		String headerKey = "Content-Disposition";
+		String headerValue = "attachment; filename=users_.pdf";
+		response.setHeader(headerKey, headerValue);
+
+		List<Quarter> listQuarters = repo2.getallquatars(domain_id);
+
+		QuaterPDFExporter exporter = new QuaterPDFExporter(listQuarters);
+		exporter.export(response);
+
+	}
+
+
+	@GetMapping("/updateweights")
+	public List<UserScore> updateWeights(@RequestBody UserScore scorede) {
+		List<UserScore> scorelist=repo4.findAll();
+		for(UserScore score:scorelist) {
+
+			if(score.getUser_id().equals(scorede.getUser_id()) && score.getGoal_id().equals(scorede.getGoal_id()) && score.getYear().equals(scorede.getYear()) && score.getQuater_id().equals(score.getQuater_id()) ) {
+				score.setUser_id(scorede.getUser_id());
+				score.setGoal_id(scorede.getGoal_id());
+				score.setYear(scorede.getYear());
+				score.setQuater_id(scorede.getQuater_id());
+				score.setWeights(scorede.getWeights());
+				repo4.save(score);
+			}
+		}
+		return scorelist;
+	}
+
+	@GetMapping("/updateself")
+	public List<UserScore> updateSelf(@RequestBody UserScore scorede) {
+		List<UserScore> scorelist=repo4.findAll();
+		for(UserScore score:scorelist) {
+
+			if(score.getUser_id().equals(scorede.getUser_id()) && 
+					score.getGoal_id().equals(scorede.getGoal_id()) && 
+					score.getYear().equals(scorede.getYear()) && 
+					score.getQuater_id().equals(score.getQuater_id()) ) {
+				score.setUser_id(scorede.getUser_id());
+				score.setGoal_id(scorede.getGoal_id());
+				score.setYear(scorede.getYear());
+				score.setQuater_id(scorede.getQuater_id());
+				score.setWeights(scorede.getWeights());
+				score.setSelf_score(scorede.getSelf_score());
+				score.setSelf_comment(scorede.getSelf_comment());
+				repo4.save(score);
+			}
+		}
+		return scorelist;
+	}
+
+}

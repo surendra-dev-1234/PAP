@@ -1,0 +1,1300 @@
+package com.Service.Goals.Users.Controller;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.Service.Goals.Users.Entity.FinalScore;
+import com.Service.Goals.Users.Entity.GoalDescription;
+import com.Service.Goals.Users.Entity.Goals;
+import com.Service.Goals.Users.Entity.PedScore;
+import com.Service.Goals.Users.Entity.Quarter;
+import com.Service.Goals.Users.Entity.Role;
+import com.Service.Goals.Users.Entity.Unfreeze;
+import com.Service.Goals.Users.Entity.UpdateUserScore;
+import com.Service.Goals.Users.Entity.UserRoleMapping;
+import com.Service.Goals.Users.Entity.UserScore;
+import com.Service.Goals.Users.Entity.Users;
+import com.Service.Goals.Users.Exception.UserEmptyNullException;
+import com.Service.Goals.Users.Exception.UserNotFoundException;
+import com.Service.Goals.Users.PDF.UserPDFExporter.FilteredmisPDFExporter;
+import com.Service.Goals.Users.PDF.UserPDFExporter.QuaterPDFExporter;
+import com.Service.Goals.Users.Repository.UserScoreRepository;
+import com.Service.Goals.Users.Service.FinalScoreService;
+import com.Service.Goals.Users.Service.GoalDescriptionService;
+import com.Service.Goals.Users.Service.GoalsService;
+import com.Service.Goals.Users.Service.PedScoreService;
+import com.Service.Goals.Users.Service.QuarterService;
+import com.Service.Goals.Users.Service.RoleService;
+import com.Service.Goals.Users.Service.UnfreezeService;
+import com.Service.Goals.Users.Service.UserRoleMappingService;
+import com.Service.Goals.Users.Service.UserScoreService;
+import com.Service.Goals.Users.Service.UsersService;
+import com.lowagie.text.DocumentException;
+
+import net.bytebuddy.implementation.bytecode.Throw;
+
+
+@RestController
+//@CrossOrigin(origins = { "http://localhost:3000", "http://localhost:4200","http://15.207.231.163:4200","http://localhost:3005", "http://15.207.231.163:4200","http://15.206.224.193:3005/"})
+@CrossOrigin(origins="*", allowedHeaders="*")
+//@CrossOrigin({"${client.url1}", "${client.url2}","${client.url3}", "${client.url4}","${client.url5}","${client.url6}"})
+public class GoalsController {
+
+	@Autowired
+	UsersService usersservice;
+
+	@Autowired
+	UserScoreService userscoreservice;
+
+	@Autowired
+	QuarterService quarterservice;
+
+	@Autowired
+	RoleService roleservice;
+
+	@Autowired
+	UserRoleMappingService userrolemappingservice;
+
+	@Autowired
+	FinalScoreService finalscoreservice;
+
+	@Autowired
+	GoalDescriptionService goaldescriptionservice;
+	
+	@Autowired
+	GoalsService goalsservice;
+	
+	@Autowired
+	UnfreezeService unfreezeservice;
+
+	//	@PostMapping("getallusers")
+	//	public Users getfindbyemail(@RequestBody Users userdetails) {
+	//		String email=userdetails.getEmail_id();
+	//		return repo.findbyemail(email);
+	//	}
+
+//	@PostMapping("getquaterdetails")
+//	public List<Quarter> getquaterdetails(@RequestBody Quarter quarter) {
+//		String domain_id = quarter.getDomain_id();
+//		return quarterservice.getquaterdetails(domain_id);
+//	}
+
+	@PostMapping("getquarterrecords")
+	public List<Quarter> getquarterrecord(@RequestBody Quarter quarter) {
+		return quarterservice.getquarterrecord(quarter.getYear(),quarter.getDomain_id());
+	}
+
+	@PostMapping("getuserdetails")
+	public List<Users> getuserdetails(@RequestBody Users userdetails) {
+		String domain_id = userdetails.getDomain_id();
+		String rm_id = userdetails.getRm_id();
+		return usersservice.getuserdetails(domain_id, rm_id);
+	}
+
+	@PostMapping("getuserpermission")
+	public ResponseEntity<Users> getuserpermission(@RequestBody Users userd)
+			throws UserEmptyNullException, UserNotFoundException {
+		String email_id = userd.getEmail_id();
+		String username = userd.getUsername();
+		Users userPermission = new Users();
+		if ((email_id.equals("") && username.equals("")) || ((email_id == null) && username == null)) {
+			System.out.println("null");
+			throw new UserEmptyNullException("Emailid and Username are required.");
+		} else {
+			Users user = usersservice.getuserpermission(email_id, username);
+			userPermission = user;
+			return ResponseEntity.ok(userPermission);
+		}
+	}
+
+//	@PostMapping("getuserscore")
+//	public Map<String, Object> getuserscore(@RequestBody UserScore usere) {
+//		String email_id = usere.getEmail_id();
+//		String year = usere.getYear();
+//		String quarter_name = usere.getQuarter_name();
+//		String domain_id = usere.getDomain_id();
+//		String flag = usere.getFlag();
+//		return userscoreservice.getuserscore(email_id, year, quarter_name, domain_id,flag );
+//	}
+	
+	@PostMapping("getuserscore2")
+	public Map<String, Object> getuserscore2(@RequestBody UserScore usere) {
+		String email_id = usere.getEmail_id();
+		String year = usere.getYear();
+		String quarter_name = usere.getQuarter_name();
+		String domain_id = usere.getDomain_id();
+		String flag = usere.getFlag();
+		return userscoreservice.getuserscore2(email_id, year, quarter_name, domain_id,flag );
+	}
+
+	@GetMapping("quaterspdf")
+	public void exportToPDF(HttpServletResponse response ,@RequestBody Quarter quarter) throws DocumentException, IOException {
+		String domain_id=quarter.getDomain_id();
+		response.setContentType("application/pdf");
+		String headerKey = "Content-Disposition";
+		String headerValue = "attachment; filename=quarters.pdf";
+		response.setHeader(headerKey, headerValue);
+		List<Quarter> listQuarters = quarterservice.getquaterdetails(domain_id);
+		QuaterPDFExporter exporter = new QuaterPDFExporter(listQuarters);
+		//System.out.println(response);
+		exporter.export(response);
+	}
+
+	@PostMapping("extractfilteredmislist")
+	public void extractfilteredmislist(HttpServletResponse response ,@RequestBody UserScore userscoreinput) throws DocumentException, IOException {
+		Map<String,List<UserScore>> filteredmisalllist= new HashMap<String,List<UserScore>>();
+		Map<String,Map<String,List<UserScore>>> filteredmislist= new HashMap<String,Map<String,List<UserScore>>>();
+		Map<String,List<UserScore>> filteredmisratinglist= new HashMap<String,List<UserScore>>();
+		FilteredmisPDFExporter exporter=null;
+		List<UserScore> userscorelist=new ArrayList<UserScore>();
+		response.setContentType("application/pdf");
+		String headerKey = "Content-Disposition";
+		String headerValue = "attachment; filename=filteredmis.pdf";
+		response.setHeader(headerKey, headerValue);
+		System.out.println(userscoreinput.getYear()+""+userscoreinput.getQuarter_id()+""+userscoreinput.getCount());
+			if(userscoreinput.getCriteriaflag().equals("All")) {
+				if(userscoreinput.getRatingflag().equals("SelfRated")) {
+					if(userscoreinput.getOrderby().equals("Ascending")) {
+						List<UserScore> newscorelist=new ArrayList<UserScore>();
+						userscorelist=userscoreservice.filteredmisalllistSelfAsc(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount());
+						for(UserScore userscore:userscorelist) {
+						System.out.println(userscore.getUser_id()+" "+userscore.getQuarter_id()+" "+userscore.getGoal_id());
+						System.out.println("trail"+userscore.getUsers().getUsername());
+						System.out.println(userscore.getQuarter().getName());
+						System.out.println(userscore.getGoals().getName());
+						try {
+							UserScore score=new UserScore();
+							score.setYear(userscore.getYear());
+							score.setSelf_score(userscore.getSelf_score());
+							score.setRm_score(userscore.getRm_score());
+							score.setPed_score(userscore.getPed_score());
+							score.setUsername(userscore.getUsers().getUsername());
+							score.setQuarter_name(userscore.getQuarter().getName());
+							score.setGoal_name(userscore.getGoals().getName());
+						try {
+							newscorelist.add(score);
+						}catch(Exception e) {
+							System.out.println(e.getMessage());
+						}
+						}catch(Exception e) {
+							System.out.println(e.getMessage());
+						}
+						}
+						
+						try {
+						filteredmisalllist.put("All",newscorelist);
+							exporter= new FilteredmisPDFExporter(filteredmisalllist.get("All")/*,userslist,quarterlist,goalslist*/);
+						}catch(Exception e) {
+							System.out.println(e.getMessage());
+						}
+				}
+					if(userscoreinput.getOrderby().equals("Descending")) {
+						List<UserScore> newscorelist=new ArrayList<UserScore>();
+						userscorelist=userscoreservice.filteredmisalllistSelfDesc(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount());
+						for(UserScore userscore:userscorelist) {
+						System.out.println(userscore.getUser_id()+" "+userscore.getQuarter_id()+" "+userscore.getGoal_id());
+						System.out.println("trail"+userscore.getUsers().getUsername());
+						System.out.println(userscore.getQuarter().getName());
+						System.out.println(userscore.getGoals().getName());
+						try {
+							UserScore score=new UserScore();
+							score.setYear(userscore.getYear());
+							score.setSelf_score(userscore.getSelf_score());
+							score.setRm_score(userscore.getRm_score());
+							score.setPed_score(userscore.getPed_score());
+							score.setUsername(userscore.getUsers().getUsername());
+							score.setQuarter_name(userscore.getQuarter().getName());
+							score.setGoal_name(userscore.getGoals().getName());
+						try {
+							newscorelist.add(score);
+						}catch(Exception e) {
+							System.out.println(e.getMessage());
+						}
+						}catch(Exception e) {
+							System.out.println(e.getMessage());
+						}
+						}
+						
+						try {
+						filteredmisalllist.put("All",newscorelist);
+							exporter= new FilteredmisPDFExporter(filteredmisalllist.get("All")/*,userslist,quarterlist,goalslist*/);
+						}catch(Exception e) {
+							System.out.println(e.getMessage());
+						}
+					}
+				}
+				else {
+					List<UserScore> newscorelist=new ArrayList<UserScore>();
+					userscorelist=userscoreservice.filteredmisalllist2(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount());
+					for(UserScore userscore:userscorelist) {
+					System.out.println(userscore.getUser_id()+" "+userscore.getQuarter_id()+" "+userscore.getGoal_id());
+					System.out.println("trail"+userscore.getUsers().getUsername());
+					System.out.println(userscore.getQuarter().getName());
+					System.out.println(userscore.getGoals().getName());
+					try {
+						UserScore score=new UserScore();
+						score.setYear(userscore.getYear());
+						score.setSelf_score(userscore.getSelf_score());
+						score.setRm_score(userscore.getRm_score());
+						score.setPed_score(userscore.getPed_score());
+						score.setUsername(userscore.getUsers().getUsername());
+						score.setQuarter_name(userscore.getQuarter().getName());
+						score.setGoal_name(userscore.getGoals().getName());
+					try {
+						newscorelist.add(score);
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}
+					}
+					
+					try {
+					filteredmisalllist.put("All",newscorelist);
+						exporter= new FilteredmisPDFExporter(filteredmisalllist.get("All")/*,userslist,quarterlist,goalslist*/);
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}
+				}
+			}
+			if(userscoreinput.getCriteriaflag().equals("Top")) {
+				if(userscoreinput.getRatingflag().equals("SelfRated")) {
+					List<UserScore> newscorelist=new ArrayList<UserScore>();
+					userscorelist=userscoreservice.filteredmistopselfratedlist2(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount());
+					for(UserScore userscore:userscorelist) {
+						System.out.println(userscore.getUser_id()+" "+userscore.getQuarter_id()+" "+userscore.getGoal_id());
+						System.out.println("trail"+userscore.getUsers().getUsername());
+						System.out.println(userscore.getQuarter().getName());
+						System.out.println(userscore.getGoals().getName());
+						try {
+							UserScore score=new UserScore();
+							score.setYear(userscore.getYear());
+							score.setSelf_score(userscore.getSelf_score());
+							score.setRm_score(userscore.getRm_score());
+							score.setPed_score(userscore.getPed_score());
+							score.setUsername(userscore.getUsers().getUsername());
+							score.setQuarter_name(userscore.getQuarter().getName());
+							score.setGoal_name(userscore.getGoals().getName());
+							newscorelist.add(score);
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}	
+					}
+					try {
+						filteredmisratinglist.put("SelfRated",newscorelist);
+						filteredmislist.put("Top",filteredmisratinglist);
+					exporter= new FilteredmisPDFExporter(filteredmisratinglist.get("SelfRated")/*,users,quarters,goals*/);
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}
+
+				}
+				if(userscoreinput.getRatingflag().equals("ManagerRated")) {
+					List<UserScore> newscorelist=new ArrayList<UserScore>();
+					userscorelist=userscoreservice.filteredmistopmanagerratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount());
+					for(UserScore userscore:userscorelist) {
+						System.out.println(userscore.getUser_id()+" "+userscore.getQuarter_id()+" "+userscore.getGoal_id());
+						System.out.println("trail"+userscore.getUsers().getUsername());
+						System.out.println(userscore.getQuarter().getName());
+						System.out.println(userscore.getGoals().getName());
+						try {
+							UserScore score=new UserScore();
+							score.setYear(userscore.getYear());
+							score.setSelf_score(userscore.getSelf_score());
+							score.setRm_score(userscore.getRm_score());
+							score.setPed_score(userscore.getPed_score());
+							score.setUsername(userscore.getUsers().getUsername());
+							score.setQuarter_name(userscore.getQuarter().getName());
+							score.setGoal_name(userscore.getGoals().getName());
+							newscorelist.add(score);
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}	
+						}
+					try {
+						filteredmisratinglist.put("ManagerRated",newscorelist);
+						filteredmislist.put("Top",filteredmisratinglist);
+						exporter= new FilteredmisPDFExporter(filteredmisratinglist.get("ManagerRated"));
+					}catch(Exception e){
+						System.out.println(e.getMessage());
+					}
+				}
+				if(userscoreinput.getRatingflag().equals("PEDRated")) {
+					List<UserScore> newscorelist=new ArrayList<UserScore>();
+					userscorelist=userscoreservice.filteredmistoppedratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount());
+					for(UserScore userscore:userscorelist) {
+						System.out.println(userscore.getUser_id()+" "+userscore.getQuarter_id()+" "+userscore.getGoal_id());
+						System.out.println("trail"+userscore.getUsers().getUsername());
+						System.out.println(userscore.getQuarter().getName());
+						System.out.println(userscore.getGoals().getName());
+						try {
+							UserScore score=new UserScore();
+							score.setYear(userscore.getYear());
+							score.setSelf_score(userscore.getSelf_score());
+							score.setRm_score(userscore.getRm_score());
+							score.setPed_score(userscore.getPed_score());
+							score.setUsername(userscore.getUsers().getUsername());
+							score.setQuarter_name(userscore.getQuarter().getName());
+							score.setGoal_name(userscore.getGoals().getName());
+							newscorelist.add(score);
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}	
+						}
+					try {
+						filteredmisratinglist.put("PEDRated",newscorelist);
+						filteredmislist.put("Top",filteredmisratinglist);
+						exporter= new FilteredmisPDFExporter(filteredmisratinglist.get("PEDRated"));
+					}catch(Exception e){
+						System.out.println(e.getMessage());
+					}
+				}
+			}
+			if(userscoreinput.getCriteriaflag().equals("Bottom")) {
+				if(userscoreinput.getRatingflag().equals("SelfRated")) {
+					List<UserScore> newscorelist=new ArrayList<UserScore>();
+					userscorelist=userscoreservice.filteredmisbottomselfratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount());
+					for(UserScore userscore:userscorelist) {
+						System.out.println(userscore.getUser_id()+" "+userscore.getQuarter_id()+" "+userscore.getGoal_id());
+						System.out.println("trail"+userscore.getUsers().getUsername());
+						System.out.println(userscore.getQuarter().getName());
+						System.out.println(userscore.getGoals().getName());
+						try {
+							UserScore score=new UserScore();
+							score.setYear(userscore.getYear());
+							score.setSelf_score(userscore.getSelf_score());
+							score.setRm_score(userscore.getRm_score());
+							score.setPed_score(userscore.getPed_score());
+							score.setUsername(userscore.getUsers().getUsername());
+							score.setQuarter_name(userscore.getQuarter().getName());
+							score.setGoal_name(userscore.getGoals().getName());
+							newscorelist.add(score);
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}	
+						}
+					try {
+						filteredmisratinglist.put("SelfRated",newscorelist);
+						filteredmislist.put("Bottom",filteredmisratinglist);
+					exporter= new FilteredmisPDFExporter(filteredmisratinglist.get("SelfRated"));
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}
+				}
+				if(userscoreinput.getRatingflag().equals("ManagerRated")) {
+					List<UserScore> newscorelist=new ArrayList<UserScore>();
+					userscorelist=userscoreservice.filteredmisbottommanagerratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount());
+					for(UserScore userscore:userscorelist) {
+						System.out.println(userscore.getUser_id()+" "+userscore.getQuarter_id()+" "+userscore.getGoal_id());
+						System.out.println("trail"+userscore.getUsers().getUsername());
+						System.out.println(userscore.getQuarter().getName());
+						System.out.println(userscore.getGoals().getName());
+						try {
+							UserScore score=new UserScore();
+							score.setYear(userscore.getYear());
+							score.setSelf_score(userscore.getSelf_score());
+							score.setRm_score(userscore.getRm_score());
+							score.setPed_score(userscore.getPed_score());
+							score.setUsername(userscore.getUsers().getUsername());
+							score.setQuarter_name(userscore.getQuarter().getName());
+							score.setGoal_name(userscore.getGoals().getName());
+							newscorelist.add(score);
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}	
+						}
+					try {
+						filteredmisratinglist.put("ManagerRated",newscorelist);
+						filteredmislist.put("Bottom",filteredmisratinglist);
+						exporter= new FilteredmisPDFExporter(filteredmisratinglist.get("ManagerRated"));
+					}catch(Exception e){
+						System.out.println(e.getMessage());
+					}
+				}
+				if(userscoreinput.getRatingflag().equals("PEDRated")) {
+					List<UserScore> newscorelist=new ArrayList<UserScore>();
+					userscorelist=userscoreservice.filteredmisbottompedratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount());
+					for(UserScore userscore:userscorelist) {
+						System.out.println(userscore.getUser_id()+" "+userscore.getQuarter_id()+" "+userscore.getGoal_id());
+						System.out.println("trail"+userscore.getUsers().getUsername());
+						System.out.println(userscore.getQuarter().getName());
+						System.out.println(userscore.getGoals().getName());
+						try {
+							UserScore score=new UserScore();
+							score.setYear(userscore.getYear());
+							score.setSelf_score(userscore.getSelf_score());
+							score.setRm_score(userscore.getRm_score());
+							score.setPed_score(userscore.getPed_score());
+							score.setUsername(userscore.getUsers().getUsername());
+							score.setQuarter_name(userscore.getQuarter().getName());
+							score.setGoal_name(userscore.getGoals().getName());
+							newscorelist.add(score);
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}	
+						}
+
+					try {
+						filteredmisratinglist.put("PEDRated",newscorelist);
+						filteredmislist.put("Bottom",filteredmisratinglist);
+						exporter= new FilteredmisPDFExporter(filteredmisratinglist.get("PEDRated"));
+					}catch(Exception e){
+						System.out.println(e.getMessage());
+					}
+				}
+			}
+			exporter.export(response);
+		}
+	
+	@PostMapping("extractmissedscoringmislist")
+	public void extractmissedscoringmislist(HttpServletResponse response,@RequestBody UserScore userscoreinput) throws DocumentException, IOException{
+		Map<String,Object> missedscorelist= new HashMap<String,Object>();
+		List<UserScore> userscorelist=new ArrayList<UserScore>();
+		FilteredmisPDFExporter exporter=null;
+		response.setContentType("application/pdf");
+		String headerKey = "Content-Disposition";
+		String headerValue = "attachment; filename=missedscoringmis.pdf";
+		response.setHeader(headerKey, headerValue);
+		if(userscoreinput.getMissedbyflag().equals("Self")) {
+			List<UserScore> newscorelist=new ArrayList<UserScore>();
+			userscorelist=userscoreservice.missedselfscoringmislist(userscoreinput.getYear(),userscoreinput.getQuarter_id());
+			for(UserScore userscore:userscorelist) {
+				try {
+					UserScore score=new UserScore();
+					score.setYear(userscore.getYear());
+					score.setSelf_score(userscore.getSelf_score());
+					score.setRm_score(userscore.getRm_score());
+					score.setPed_score(userscore.getPed_score());
+					score.setUsername(userscore.getUsers().getUsername());
+					score.setQuarter_name(userscore.getQuarter().getName());
+					score.setGoal_name(userscore.getGoals().getName());
+					newscorelist.add(score);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+			}
+			try {
+		missedscorelist.put("Self",newscorelist);
+		exporter= new FilteredmisPDFExporter(missedscorelist.get("Self"));
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+		}
+		if(userscoreinput.getMissedbyflag().equals("Manager")) {
+			List<UserScore> newscorelist=new ArrayList<UserScore>();
+			userscorelist=userscoreservice.missedmanagerscoringmislist(userscoreinput.getYear(),userscoreinput.getQuarter_id());
+			for(UserScore userscore:userscorelist) {
+				try {
+					UserScore score=new UserScore();
+					score.setYear(userscore.getYear());
+					score.setSelf_score(userscore.getSelf_score());
+					score.setRm_score(userscore.getRm_score());
+					score.setPed_score(userscore.getPed_score());
+					score.setUsername(userscore.getUsers().getUsername());
+					score.setQuarter_name(userscore.getQuarter().getName());
+					score.setGoal_name(userscore.getGoals().getName());
+					newscorelist.add(score);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+			}
+			try {
+		missedscorelist.put("Manager",newscorelist);
+		exporter= new FilteredmisPDFExporter(missedscorelist.get("Manager"));
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+		}
+		if(userscoreinput.getMissedbyflag().equals("PED")) {
+			List<UserScore> newscorelist=new ArrayList<UserScore>();
+			userscorelist=userscoreservice.missedpedscoringmislist(userscoreinput.getYear(),userscoreinput.getQuarter_id());
+			for(UserScore userscore:userscorelist) {
+				try {
+					UserScore score=new UserScore();
+					score.setYear(userscore.getYear());
+					score.setSelf_score(userscore.getSelf_score());
+					score.setRm_score(userscore.getRm_score());
+					score.setPed_score(userscore.getPed_score());
+					score.setUsername(userscore.getUsers().getUsername());
+					score.setQuarter_name(userscore.getQuarter().getName());
+					score.setGoal_name(userscore.getGoals().getName());
+					newscorelist.add(score);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+			}
+			try {
+			missedscorelist.put("PED",newscorelist);
+			exporter= new FilteredmisPDFExporter(missedscorelist.get("PED"));
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+		}
+		exporter.export(response);
+	}
+	@PostMapping("extractgapmislist")
+	public void extractgapmislist(HttpServletResponse response,@RequestBody UserScore userscoreinput) throws DocumentException, IOException {
+		Map<String,List<UserScore>> gapmislistlist= new HashMap<String,List<UserScore>>();	
+		List<UserScore> userscorelist=new ArrayList<UserScore>();
+		FilteredmisPDFExporter exporter=null;
+		response.setContentType("application/pdf");
+		String headerKey = "Content-Disposition";
+		String headerValue = "attachment; filename=gapmis.pdf";
+		response.setHeader(headerKey, headerValue);
+		if(userscoreinput.getGoal_id().equals("0")){
+        	List<UserScore> newscorelist=new ArrayList<UserScore>();
+			userscorelist=userscoreservice.gapmislistAny(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getGap_size());
+			for(UserScore userscore:userscorelist) {
+				try {
+					UserScore score=new UserScore();
+					score.setYear(userscore.getYear());
+					score.setSelf_score(userscore.getSelf_score());
+					score.setRm_score(userscore.getRm_score());
+					score.setPed_score(userscore.getPed_score());
+					score.setUsername(userscore.getUsers().getUsername());
+					score.setQuarter_name(userscore.getQuarter().getName());
+					score.setGoal_name(userscore.getGoals().getName());
+					newscorelist.add(score);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+			}
+			try {
+		gapmislistlist.put("GapSize0",newscorelist);
+		exporter= new FilteredmisPDFExporter(gapmislistlist.get("GapSize0"));
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}
+		}
+		if(userscoreinput.getGoal_id().equals("1") || userscoreinput.getGoal_id().equals("6")) {
+			List<UserScore> newscorelist=new ArrayList<UserScore>();
+			//Goals goals=goalsservice.getgoal_id(userscoreinput.getGapparameter());
+			userscorelist=userscoreservice.gapmislistParam(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getGoal_id(),userscoreinput.getGap_size());
+			for(UserScore userscore:userscorelist) {
+				try {
+					UserScore score=new UserScore();
+					score.setYear(userscore.getYear());
+					score.setSelf_score(userscore.getSelf_score());
+					score.setRm_score(userscore.getRm_score());
+					score.setPed_score(userscore.getPed_score());
+					score.setUsername(userscore.getUsers().getUsername());
+					score.setQuarter_name(userscore.getQuarter().getName());
+					score.setGoal_name(userscore.getGoals().getName());
+					newscorelist.add(score);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+			}
+			try {
+		gapmislistlist.put("GapSize1",newscorelist);
+		exporter= new FilteredmisPDFExporter(gapmislistlist.get("GapSize1"));
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}
+		}
+		if(userscoreinput.getGoal_id().equals("2") || userscoreinput.getGoal_id().equals("7")) {
+			List<UserScore> newscorelist=new ArrayList<UserScore>();
+			//Goals goals=goalsservice.getgoal_id(userscoreinput.getGapparameter());
+			userscorelist=userscoreservice.gapmislistParam(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getGoal_id(),userscoreinput.getGap_size());
+			for(UserScore userscore:userscorelist) {
+				try {
+					UserScore score=new UserScore();
+					score.setYear(userscore.getYear());
+					score.setSelf_score(userscore.getSelf_score());
+					score.setRm_score(userscore.getRm_score());
+					score.setPed_score(userscore.getPed_score());
+					score.setUsername(userscore.getUsers().getUsername());
+					score.setQuarter_name(userscore.getQuarter().getName());
+					score.setGoal_name(userscore.getGoals().getName());
+					newscorelist.add(score);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+			}
+			try {
+		gapmislistlist.put("GapSize2",newscorelist);
+		exporter= new FilteredmisPDFExporter(gapmislistlist.get("GapSize2"));
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}
+		}
+		if(userscoreinput.getGoal_id().equals("3") || userscoreinput.getGoal_id().equals("8")) {
+			List<UserScore> newscorelist=new ArrayList<UserScore>();
+			//Goals goals=goalsservice.getgoal_id(userscoreinput.getGapparameter());
+			userscorelist=userscoreservice.gapmislistParam(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getGoal_id(),userscoreinput.getGap_size());
+			for(UserScore userscore:userscorelist) {
+				try {
+					UserScore score=new UserScore();
+					score.setYear(userscore.getYear());
+					score.setSelf_score(userscore.getSelf_score());
+					score.setRm_score(userscore.getRm_score());
+					score.setPed_score(userscore.getPed_score());
+					score.setUsername(userscore.getUsers().getUsername());
+					score.setQuarter_name(userscore.getQuarter().getName());
+					score.setGoal_name(userscore.getGoals().getName());
+					newscorelist.add(score);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+			}
+			try {
+		gapmislistlist.put("GapSize3",newscorelist);
+		exporter= new FilteredmisPDFExporter(gapmislistlist.get("GapSize3"));
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}
+		}
+		if(userscoreinput.getGoal_id().equals("4") || userscoreinput.getGoal_id().equals("9")) {
+			List<UserScore> newscorelist=new ArrayList<UserScore>();
+			//Goals goals=goalsservice.getgoal_id(userscoreinput.getGapparameter());
+			userscorelist=userscoreservice.gapmislistParam(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getGoal_id(),userscoreinput.getGap_size());
+			for(UserScore userscore:userscorelist) {
+				try {
+					UserScore score=new UserScore();
+					score.setYear(userscore.getYear());
+					score.setSelf_score(userscore.getSelf_score());
+					score.setRm_score(userscore.getRm_score());
+					score.setPed_score(userscore.getPed_score());
+					score.setUsername(userscore.getUsers().getUsername());
+					score.setQuarter_name(userscore.getQuarter().getName());
+					score.setGoal_name(userscore.getGoals().getName());
+					newscorelist.add(score);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+			}
+			try {
+		gapmislistlist.put("GapSize4",newscorelist);
+		exporter= new FilteredmisPDFExporter(gapmislistlist.get("GapSize4"));
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}
+		}
+        if(userscoreinput.getGoal_id().equals("5") || userscoreinput.getGoal_id().equals("10")) {
+        	List<UserScore> newscorelist=new ArrayList<UserScore>();
+			//Goals goals=goalsservice.getgoal_id(userscoreinput.getGapparameter());
+			userscorelist=userscoreservice.gapmislistParam(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getGoal_id(),userscoreinput.getGap_size());
+			for(UserScore userscore:userscorelist) {
+				try {
+					UserScore score=new UserScore();
+					score.setYear(userscore.getYear());
+					score.setSelf_score(userscore.getSelf_score());
+					score.setRm_score(userscore.getRm_score());
+					score.setPed_score(userscore.getPed_score());
+					score.setUsername(userscore.getUsers().getUsername());
+					score.setQuarter_name(userscore.getQuarter().getName());
+					score.setGoal_name(userscore.getGoals().getName());
+					newscorelist.add(score);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}	
+			}
+			try {
+		gapmislistlist.put("GapSize5",newscorelist);
+		exporter= new FilteredmisPDFExporter(gapmislistlist.get("GapSize5"));
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}
+		}
+        exporter.export(response);
+	}
+	
+	@PostMapping("updateAllweights2")
+	public ResponseEntity<String> updateAllWeights2(@RequestBody UpdateUserScore updateuserscore){
+		System.out.println(updateuserscore);
+		List<UserScore> newscorelist = new ArrayList<UserScore>();
+		List<UserScore> userscorelist = updateuserscore.getUserscore();
+
+		//System.out.println(userscorelist.get(1).getGoal_id());
+		for (int i = 0; i < userscorelist.size(); i++) 
+		{
+			//System.out.println("values" + i);
+			UserScore usajson = userscorelist.get(i);
+			//System.out.println(usajson.getGoal_Descriptions());
+			int length=0;
+			length=usajson.getGoal_Descriptions().length;
+			System.out.print(length+" ");
+			String desc="";
+			for(String goal_description:usajson.getGoal_Descriptions()) {
+				desc+=goal_description+";";
+			}
+			System.out.println(desc);
+			usajson.setGoal_Description(desc);
+			//System.out.println(usajson.getGoal_Description());
+			newscorelist = userscoreservice.updateAllweights(usajson.getUser_id(), usajson.getYear(),usajson.getQuarter_id(), usajson.getGoal_id(),usajson.getWeights(),usajson.getGoal_Description(),usajson.getRm_id());		
+		}
+		try
+		{
+			//System.out.println("size="+newscorelist.size());
+			if(!newscorelist.isEmpty()) {
+				userscoreservice.saveAlluserscores(newscorelist);
+				return new ResponseEntity<String>("Weights are updated Sucessfully", HttpStatus.OK);
+			}
+			return new ResponseEntity<String>("Failed", HttpStatus.NOT_FOUND);
+		}
+		catch (Exception e) 
+		{
+			e.printStackTrace();
+			throw new UserEmptyNullException("Input Values are null");
+		}	
+	}
+	
+	@PostMapping("updateAllweights")
+	public ResponseEntity<String> updateAllWeights(@RequestBody UpdateUserScore updateuserscore) 
+	{ 
+		System.out.println(updateuserscore);
+		List<UserScore> newscorelist = new ArrayList<UserScore>();
+		List<UserScore> userscorelist = updateuserscore.getUserscore();
+
+		System.out.println(userscorelist.get(1).getGoal_id());
+		for (int i = 0; i < userscorelist.size(); i++) 
+		{
+			System.out.println("values" + i);
+			UserScore usajson = userscorelist.get(i);
+			newscorelist = userscoreservice.updateAllweights(usajson.getUser_id(), usajson.getYear(),usajson.getQuarter_id(), usajson.getGoal_id(),usajson.getWeights(),usajson.getGoal_Description(),usajson.getRm_id());		
+		}
+		try
+		{
+			System.out.println("size="+newscorelist.size());
+			if(!newscorelist.isEmpty()) {
+				userscoreservice.saveAlluserscores(newscorelist);
+				return new ResponseEntity<String>("Weights are updated Sucessfully", HttpStatus.OK);
+			}
+			return new ResponseEntity<String>("Failed", HttpStatus.NOT_FOUND);
+		}
+		catch (Exception e) 
+		{
+			e.printStackTrace();
+			throw new UserEmptyNullException("Input Values are null");
+		}	
+	}
+
+	@PostMapping("updateweights")
+	public ResponseEntity<String> updateWeights(@RequestBody UserScore scorede) {
+		System.out.println(scorede.getGoal_id());
+		if (scorede.getUser_id().equals("") && scorede.getGoal_id().equals("") && scorede.getYear().equals("")
+				&& scorede.getQuarter_id().equals("")
+				|| (scorede.getUser_id().equals(null) && scorede.getGoal_id().equals(null)
+						&& scorede.getYear().equals(null) && scorede.getQuarter_id().equals(null))) {
+			System.out.println("null");
+			throw new UserEmptyNullException("user_id, goal_id, year, quarter_id are required.");
+		}
+		UserScore scorelist = userscoreservice.updateWeights(scorede.getUser_id(), scorede.getYear(),
+				scorede.getQuarter_id(), scorede.getGoal_id(), scorede.getWeights(),scorede.getRm_id());
+
+		return new ResponseEntity<>("Weights are updated sucessfully ", HttpStatus.OK);
+
+		//		throw new UserNotFoundException("User details are wrong. Please provide correct details");
+
+	}
+
+	@PostMapping("getgoaldescription")
+	public Map<String,List<GoalDescription>> getGoalDescription() {
+		List<GoalDescription> goaldescriptionlist=goaldescriptionservice.getGoalsDescription();
+		Map<String,List<GoalDescription>> goaldescriptionMap= new HashMap<String,List<GoalDescription>>();
+		List<GoalDescription> goaldesclist=null;
+		for(GoalDescription goaldescription:goaldescriptionlist) 
+		{
+			if(goaldescriptionMap.get(goaldescription.getGoal_id())!=null) {
+				System.out.println(goaldescriptionMap.get(goaldescription.getGoal_id()));
+				goaldesclist = goaldescriptionMap.get(goaldescription.getGoal_id());	
+			}
+			else{
+				goaldesclist=new ArrayList<GoalDescription>();
+			}
+			goaldesclist.add(goaldescription);
+			goaldescriptionMap.put(goaldescription.getGoal_id(), goaldesclist);
+		}
+		System.out.println(goaldescriptionMap);
+		return goaldescriptionMap;
+	}
+
+	@PostMapping("updateselfscore")
+	public ResponseEntity<String> updateselfscore(@RequestBody UpdateUserScore updateuserscore) 
+	{
+		List<Users> userslist = new ArrayList<Users>();
+		List<UserScore> userscorelist = updateuserscore.getUserscore();
+		List<UserScore> newscorelist = new ArrayList<UserScore>();
+		List<UserScore> allscoreslist = new ArrayList<UserScore>();
+		List<FinalScore> allfinalscoreslist = new ArrayList<FinalScore>();
+		Double selfscorefinal=0.0;
+//		String selfcommentfinal="";
+//		String selfcommentupdatedbyfinal="";
+//		String selfcommentupdateddatefinal="";
+
+		userslist=usersservice.getuser(Long.parseLong(userscorelist.get(0).getUser_id()));
+
+		if(!userslist.isEmpty()) {
+			for (UserScore usajson:userscorelist) {
+				newscorelist = userscoreservice.updateselfscore(usajson.getUser_id(), usajson.getYear(),usajson.getQuarter_id(), usajson.getGoal_id(),usajson.getSelf_score(),usajson.getSelf_comment());
+				allscoreslist=userscoreservice.findalluserscores(usajson.getUser_id(), usajson.getYear(), usajson.getQuarter_id());
+			}
+			try
+			{
+				if(!newscorelist.isEmpty()) {
+					userscoreservice.saveAlluserscores(newscorelist);
+					if(!allscoreslist.isEmpty()) {
+						for(UserScore score:userscorelist) {
+							//					for(int i = 0; i < userscorelist.size(); i++) {
+							//UserScore score=userscorelist.get(i);
+							//						int j=i;
+							//						j++;
+							selfscorefinal +=score.getSelf_score()/5;
+							//						selfcommentfinal +=j+"."+score.getSelf_comment()+"\t";
+							//						selfcommentupdatedbyfinal +=j+"."+score.getSelf_score_update_by()+"\t";
+							//						selfcommentupdateddatefinal +=j+"."+score.getPed_score_update_date()+"\t";
+
+						}
+						System.out.println(selfscorefinal);
+						//					System.out.println(selfcommentfinal);
+						//					System.out.println(selfcommentupdatedbyfinal);
+						//					System.out.println(selfcommentupdateddatefinal);
+
+						allfinalscoreslist=finalscoreservice.findfinalscore(allscoreslist.get(0).getUser_id(), allscoreslist.get(0).getYear(), allscoreslist.get(0).getQuarter_id());
+						if(allfinalscoreslist.isEmpty()) {
+							finalscoreservice.updatefinalselfscore(allscoreslist.get(0).getUser_id(), allscoreslist.get(0).getYear(), allscoreslist.get(0).getQuarter_id(), selfscorefinal);
+							return new ResponseEntity<String>("SelfScores are updated Sucessfully", HttpStatus.OK);
+						}
+						else{
+							try {
+								finalscoreservice.updatefinalselfscoreexists(allscoreslist.get(0).getUser_id(), allscoreslist.get(0).getYear(), allscoreslist.get(0).getQuarter_id(), selfscorefinal);
+								return new ResponseEntity<String>("SelfScores are updated Sucessfully", HttpStatus.OK);
+							}catch(Exception e) {
+								System.out.println(e.getMessage());
+							}
+						}
+
+					}
+					return new ResponseEntity<String>("SelfScores are updated Sucessfully", HttpStatus.OK);
+				}
+				return new ResponseEntity<String>("Failed", HttpStatus.OK);
+
+			}
+
+			catch (Exception e) 
+			{
+				e.printStackTrace();
+				//throw new UserEmptyNullException("Input Values are null");
+			}	
+		}
+		throw new UserNotFoundException("User details are wrong. Please provide correct details"); 
+	}
+
+	@PostMapping("updatermscore")
+	public ResponseEntity<String> updatermscore(@RequestBody UpdateUserScore updateuserscore) 
+	{
+		List<Users> userslist = new ArrayList<Users>();
+		List<UserScore> newscorelist = new ArrayList<UserScore>();
+		List<UserScore> userscorelist = updateuserscore.getUserscore();
+		List<UserScore> allscoreslist = new ArrayList<UserScore>();
+		List<FinalScore> allfinalscoreslist = new ArrayList<FinalScore>();
+		System.out.println(userscorelist.size());
+
+		Double rmscorefinal=0.0;
+
+		userslist=usersservice.getuser(Long.parseLong(userscorelist.get(0).getUser_id()));
+
+		if(!userslist.isEmpty()) {
+			for (UserScore usajson:userscorelist) 
+			{
+				newscorelist = userscoreservice.updatermscore(usajson.getUser_id(), usajson.getYear(),usajson.getQuarter_id(), usajson.getGoal_id(),usajson.getRm_id(),usajson.getRm_score(),usajson.getRm_comment());
+				allscoreslist=userscoreservice.findalluserscores(usajson.getUser_id(), usajson.getYear(), usajson.getQuarter_id());
+			}
+			try
+			{
+				if(!newscorelist.isEmpty()) {
+					userscoreservice.saveAlluserscores(newscorelist);
+					if(!allscoreslist.isEmpty()) {
+						for(UserScore score:userscorelist) {
+							//					for(int i = 0; i < userscorelist.size(); i++) {
+							//UserScore score=userscorelist.get(i);
+							//						int j=i;
+							//						j++;
+							rmscorefinal +=score.getRm_score()/5;
+							//						selfcommentfinal +=j+"."+score.getSelf_comment()+"\t";
+							//						selfcommentupdatedbyfinal +=j+"."+score.getSelf_score_update_by()+"\t";
+							//						selfcommentupdateddatefinal +=j+"."+score.getPed_score_update_date()+"\t";
+
+						}
+						System.out.println(rmscorefinal);
+						//					System.out.println(selfcommentfinal);
+						//					System.out.println(selfcommentupdatedbyfinal);
+						//					System.out.println(selfcommentupdateddatefinal);
+
+						allfinalscoreslist=finalscoreservice.findfinalscore(allscoreslist.get(0).getUser_id(), allscoreslist.get(0).getYear(), allscoreslist.get(0).getQuarter_id());				
+						if(allfinalscoreslist.isEmpty()) {
+							finalscoreservice.updatefinalrmscore(allscoreslist.get(0).getUser_id(), allscoreslist.get(0).getYear(), allscoreslist.get(0).getQuarter_id(), allscoreslist.get(0).getRm_id(),rmscorefinal);
+							return new ResponseEntity<String>("RmScores are updated Sucessfully", HttpStatus.OK);
+						}
+						else{
+							try {
+								finalscoreservice.updatefinalrmscoreexists(allscoreslist.get(0).getUser_id(), allscoreslist.get(0).getYear(), allscoreslist.get(0).getQuarter_id(), allscoreslist.get(0).getRm_score_update_by(),rmscorefinal);
+								return new ResponseEntity<String>("RmScores are updated Sucessfully", HttpStatus.OK);
+							}catch(Exception e) {
+								System.out.println(e.getMessage());
+							}
+						}
+					}
+					return new ResponseEntity<String>("RmScores are updated Sucessfully", HttpStatus.OK);
+				}
+				System.out.println(newscorelist);
+				return new ResponseEntity<String>("Failed", HttpStatus.NOT_FOUND);
+			}
+			catch (Exception e) 
+			{
+				e.printStackTrace();
+				throw new UserEmptyNullException("Input Values are null");
+			}	
+		}
+		throw new UserNotFoundException("User details are wrong. Please provide correct details"); 
+	}
+
+	@PostMapping("updatepedscore")
+	public ResponseEntity<String> updatepedscore(@RequestBody UpdateUserScore updateuserscore) 
+	{
+		List<Users> userslist = new ArrayList<Users>();
+		List<UserScore> newscorelist = new ArrayList<UserScore>();
+		List<UserScore> userscorelist = updateuserscore.getUserscore();
+		List<UserScore> allscoreslist = new ArrayList<UserScore>();
+		List<FinalScore> allfinalscoreslist = new ArrayList<FinalScore>();
+
+		Double pedscorefinal=0.0;
+
+		userslist=usersservice.getuser(Long.parseLong(userscorelist.get(0).getUser_id()));
+
+		if(!userslist.isEmpty()) {
+
+			for (int i = 0; i < userscorelist.size(); i++) 
+			{
+				System.out.println("values" + i);
+				UserScore usajson = userscorelist.get(i);
+				newscorelist = userscoreservice.updatepedscore(usajson.getUser_id(), usajson.getYear(),usajson.getQuarter_id(), usajson.getGoal_id(),usajson.getPed_id(),usajson.getPed_score(),usajson.getPed_comment());		
+				allscoreslist=userscoreservice.findalluserscores(usajson.getUser_id(), usajson.getYear(), usajson.getQuarter_id());
+			}
+			try
+			{
+				if(!newscorelist.isEmpty()) {
+					System.out.println("hbhjhjj");
+					userscoreservice.saveAlluserscores(newscorelist);
+					if(!allscoreslist.isEmpty()) {
+						for(UserScore score:userscorelist) {
+							//					for(int i = 0; i < userscorelist.size(); i++) {
+							//UserScore score=userscorelist.get(i);
+							//						int j=i;
+							//						j++;
+							pedscorefinal +=score.getPed_score()/5;
+							//						selfcommentfinal +=j+"."+score.getSelf_comment()+"\t";
+							//						selfcommentupdatedbyfinal +=j+"."+score.getSelf_score_update_by()+"\t";
+							//						selfcommentupdateddatefinal +=j+"."+score.getPed_score_update_date()+"\t";
+
+						}
+						System.out.println(pedscorefinal);
+						//					System.out.println(selfcommentfinal);
+						//					System.out.println(selfcommentupdatedbyfinal);
+						//					System.out.println(selfcommentupdateddatefinal);
+
+						allfinalscoreslist=finalscoreservice.findfinalscore(allscoreslist.get(0).getUser_id(), allscoreslist.get(0).getYear(), allscoreslist.get(0).getQuarter_id());				
+						if(allfinalscoreslist.isEmpty()) {
+							finalscoreservice.updatefinalrmscore(allscoreslist.get(0).getUser_id(), allscoreslist.get(0).getYear(), allscoreslist.get(0).getQuarter_id(), allscoreslist.get(0).getPed_id(),pedscorefinal);
+							return new ResponseEntity<String>("PedScores are updated Sucessfully", HttpStatus.OK);
+						}
+						else{
+							try {
+								finalscoreservice.updatefinalpedscoreexists(allscoreslist.get(0).getUser_id(), allscoreslist.get(0).getYear(), allscoreslist.get(0).getQuarter_id(), allscoreslist.get(0).getPed_score_update_by(),pedscorefinal);
+								return new ResponseEntity<String>("PedScores are updated Sucessfully", HttpStatus.OK);
+							}catch(Exception e) {
+								System.out.println(e.getMessage());
+							}
+						}
+					}
+					return new ResponseEntity<String>("PedScores are updated Sucessfully", HttpStatus.OK);
+				}
+				return new ResponseEntity<String>("Failed", HttpStatus.NOT_FOUND);
+			}
+			catch (Exception e) 
+			{
+				e.printStackTrace();
+				throw new UserEmptyNullException("Input Values are null");
+			}	
+		}
+		throw new UserNotFoundException("User details are wrong. Please provide correct details"); 
+	}
+
+
+	@PostMapping("getpedlist")
+	public  Map<String, Object> getpedlist(){ 
+		Map<String,Object> pedMap=new HashMap<String, Object>();
+		pedMap.put("Ped",usersservice.getPedlist());
+		pedMap.put("NonPed",usersservice.getnonPedlist());
+		return pedMap;
+	}
+
+	@PostMapping("getmislist")
+	public  Map<String, Object> getmislist(){ 
+		Map<String,Object> misMap=new HashMap<String, Object>();
+		misMap.put("Mis",usersservice.getMislist());
+		misMap.put("NonMis",usersservice.getnonMislist());
+		return misMap;
+	}
+
+
+	@PostMapping("getfreezelist")
+	public  Map<String,Object> getfreezelist(){ 
+		Map<String,Object> freezeMap=new HashMap<String, Object>();
+		freezeMap.put("Freeze", usersservice.getFreezelist());
+		freezeMap.put("UnFreeze", usersservice.getunFreezelist());
+		return freezeMap;
+	}
+
+	@PostMapping("addpeduser")
+	public  Map<String,Object> addpeduser(@RequestBody Users usersinput){ 
+		Map<String,Object> pedMap=new HashMap<String, Object>();
+		usersservice.addpeduser(usersinput.getUser_id());
+		Role roleinput=new Role();
+		roleinput.setRolename("PED_USER");
+		UserRoleMapping userrolemappinginput=new UserRoleMapping();
+		Role roledata=roleservice.getrolename(roleinput.getRolename());
+		userrolemappinginput.setRole_id(Long.toString(roledata.getRole_id()));
+		userrolemappingservice.adduserrolemapping(userrolemappinginput.getRole_id(),Long.toString(usersinput.getUser_id()));
+		pedMap.put("Ped",usersservice.getPedlist());
+		pedMap.put("NonPed",usersservice.getnonPedlist());
+		return pedMap;
+	}
+
+
+	@PostMapping("deletepeduser")
+	public Map<String,Object> deletepeduser2(@RequestBody Users usersinput){ 
+		Map<String,Object> pedMap=new HashMap<String, Object>();
+		usersservice.deletepeduser(usersinput.getUser_id().toString());
+		usersservice.deletepeduserupdated(usersinput.getUser_id());
+		Role roleinput=new Role();
+		roleinput.setRolename("PED_USER");
+		UserRoleMapping userrolemappinginput=new UserRoleMapping();
+		Role roledata=roleservice.getrolename(roleinput.getRolename());
+		userrolemappinginput.setRole_id(Long.toString(roledata.getRole_id()));
+		userrolemappingservice.deleteuserrolemapping(userrolemappinginput.getRole_id(),Long.toString(usersinput.getUser_id()));
+		pedMap.put("Ped",usersservice.getPedlist());
+		pedMap.put("NonPed",usersservice.getnonPedlist());
+		return pedMap;
+	}
+
+	@PostMapping("addmisuser")
+	public  Map<String,Object> addmisuser(@RequestBody Users usersinput){ 
+		Map<String,Object> misMap=new HashMap<String, Object>();
+		usersinput.getUser_id();
+		usersservice.addmisuser(usersinput.getUser_id());
+		Role roleinput=new Role();
+		roleinput.setRolename("MIS_USER");
+		UserRoleMapping userrolemappinginput=new UserRoleMapping();
+		Role roledata=roleservice.getrolename(roleinput.getRolename());
+		userrolemappinginput.setRole_id(Long.toString(roledata.getRole_id()));
+		userrolemappingservice.adduserrolemapping(userrolemappinginput.getRole_id(),Long.toString(usersinput.getUser_id()));
+		misMap.put("Mis",usersservice.getMislist());
+		misMap.put("NonMis",usersservice.getnonMislist());
+		return misMap;
+	}
+
+	@PostMapping("deletemisuser")
+	public Map<String,Object> deletemisuser(@RequestBody Users usersinput){ 
+		Map<String,Object> misMap=new HashMap<String, Object>();
+		usersinput.getUser_id();
+		usersservice.deletemisuser(usersinput.getUser_id());
+		Role roleinput=new Role();
+		roleinput.setRolename("MIS_USER");
+		UserRoleMapping userrolemappinginput=new UserRoleMapping();
+		Role roledata=roleservice.getrolename(roleinput.getRolename());
+		userrolemappinginput.setRole_id(Long.toString(roledata.getRole_id()));
+		userrolemappingservice.deleteuserrolemapping(userrolemappinginput.getRole_id(),Long.toString(usersinput.getUser_id()));
+		misMap.put("Mis",usersservice.getMislist());
+		misMap.put("NonMis",usersservice.getnonMislist());
+		return misMap;
+	}
+
+	@PostMapping("freeze")
+	public  Map<String,Object> freeze(@RequestBody Users usersinput){ 
+		Map<String,Object> freezeMap=new HashMap<String, Object>();
+		usersinput.getUser_id();
+		usersservice.freeze(usersinput.getUser_id());
+		Role roleinput=new Role();
+		roleinput.setRolename("UNFREEZE_USER");
+		UserRoleMapping userrolemappinginput=new UserRoleMapping();
+		Role roledata=roleservice.getrolename(roleinput.getRolename());
+		userrolemappinginput.setRole_id(Long.toString(roledata.getRole_id()));
+		userrolemappingservice.adduserrolemapping(userrolemappinginput.getRole_id(),Long.toString(usersinput.getUser_id()));
+		freezeMap.put("Freeze",usersservice.getFreezelist());
+		freezeMap.put("UnFreeze",usersservice.getunFreezelist());
+		return freezeMap;
+	}
+
+	@PostMapping("unfreeze")
+	public Map<String,Object> unfreeze(@RequestBody Users usersinput){ 
+		Map<String,Object> freezeMap=new HashMap<String, Object>();
+		usersinput.getUser_id();
+		usersservice.unfreeze(usersinput.getUser_id());
+		Role roleinput=new Role();
+		roleinput.setRolename("UNFREEZE_USER");
+		UserRoleMapping userrolemappinginput=new UserRoleMapping();
+		Role roledata=roleservice.getrolename(roleinput.getRolename());
+		userrolemappinginput.setRole_id(Long.toString(roledata.getRole_id()));
+		userrolemappingservice.deleteuserrolemapping(userrolemappinginput.getRole_id(),Long.toString(usersinput.getUser_id()));
+		freezeMap.put("Freeze",usersservice.getFreezelist());
+		freezeMap.put("UnFreeze",usersservice.getunFreezelist());
+		return freezeMap;
+	}
+
+	
+	@PostMapping("updatepedusermapping")
+	public Map<String,Object> deletepedmapping(@RequestBody Users usersinput){
+		Map<String,Object> hrMap=new HashMap<String,Object>();
+		if(usersinput.getPedmappingflag().equals("A")){
+			//usersservice.hrdefaultemp(usersinput.getPed_id());
+			Long[] user_ids=usersinput.getUser_ids();
+			for(Long user_id:user_ids) {
+				usersinput.setUser_id(user_id);
+				usersservice.hrmapselectedempupdate(usersinput.getPed_id(),usersinput.getUser_id());
+				hrMap.put("Avaliable", usersservice.hrmapavaliableemp(Long.parseLong(usersinput.getPed_id())));
+				hrMap.put("Selected", usersservice.hrmapselectedemp(Long.parseLong(usersinput.getPed_id())));
+			}
+			}
+		if(usersinput.getPedmappingflag().equals("D")){
+			//usersservice.hrdefaultemp(usersinput.getPed_id());
+			Long[] user_ids=usersinput.getUser_ids();
+			for(Long user_id:user_ids) {
+				usersinput.setUser_id(user_id);
+				try {
+					usersservice.hrmapselectedempdeleted(usersinput.getUser_id());
+				}catch(Exception e) {
+					System.out.println(e.getMessage());
+				}
+			//usersservice.hrmapselectedempupdate(usersinput.getPed_id(),usersinput.getUser_id());
+				
+				hrMap.put("Avaliable", usersservice.hrmapavaliableemp(Long.parseLong(usersinput.getPed_id())));
+				hrMap.put("Selected", usersservice.hrmapselectedemp(Long.parseLong(usersinput.getPed_id())));
+			}
+			}
+		return hrMap;
+	}
+	
+	@PostMapping("gethrmapupdatedemplist")
+	public Map<String,Object> gethrmapupdatedemplist(@RequestBody Users usersinput){
+		Map<String,Object> hrMap=new HashMap<String,Object>();
+		if(usersinput.getPedmappingflag().equals("A")){
+		usersservice.hrdefaultemp(usersinput.getPed_id());
+		Long[] user_ids=usersinput.getUser_ids();
+		for(Long user_id:user_ids) {
+			usersinput.setUser_id(user_id);
+			usersservice.hrmapselectedempupdate(usersinput.getPed_id(),usersinput.getUser_id());
+			hrMap.put("Avaliable", usersservice.hrmapavaliableemp(Long.parseLong(usersinput.getPed_id())));
+			hrMap.put("Selected", usersservice.hrmapselectedemp(Long.parseLong(usersinput.getPed_id())));
+		}
+		}
+		return hrMap;
+	}
+
+	@PostMapping("gethrmapdeletedemplist")
+	public Map<String,Object> gethrmapdeletedemplist(@RequestBody Users usersinput) {
+		Map<String,Object> hrMap=new HashMap<String,Object>();
+		if(usersinput.getPedmappingflag().equals("D")){
+		usersservice.hrdefaultemp(usersinput.getPed_id());
+		Long[] user_ids=usersinput.getUser_ids();
+		for(Long user_id:user_ids) {
+			usersinput.setUser_id(user_id);
+			usersservice.hrmapselectedempupdate(usersinput.getPed_id(),usersinput.getUser_id());
+			hrMap.put("Avaliable", usersservice.hrmapavaliableemp(Long.parseLong(usersinput.getPed_id())));
+			hrMap.put("Selected", usersservice.hrmapselectedemp(Long.parseLong(usersinput.getPed_id())));
+		}
+		}
+		return hrMap;
+	}
+
+	@PostMapping("gethrmapemplist")
+	public Map<String,Object> gethrmapemplist(@RequestBody Users usersinput) {
+		Map<String,Object> hrMap=new HashMap<String,Object>();
+		hrMap.put("Avaliable", usersservice.hrmapavaliableemp(Long.parseLong(usersinput.getPed_id())));
+		hrMap.put("Selected", usersservice.hrmapselectedemp(Long.parseLong(usersinput.getPed_id())));
+		return hrMap;
+	}
+
+	
+//	@PostMapping("getfilteredmislist")
+//	public Map<String,Object> getfilteredmislist(@RequestBody UserScore userscoreinput) {
+//		Map<String,Object> filteredmislist= new HashMap<String,Object>();
+//		Map<String,Object> orderingcriteriatopmap= new HashMap<String,Object>();
+//		Map<String,Object> orderingcriteriabottommap= new HashMap<String,Object>();
+//		String criteriaflag=userscoreinput.getCriteriaflag();
+//		System.out.println(criteriaflag);
+//		String ratingflag=userscoreinput.getRatingflag();
+//		System.out.println(ratingflag);
+//		if(criteriaflag.equals("All")) {
+//			filteredmislist.put("All",userscoreservice.filteredmisalllist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount()));
+//		}
+//		if(criteriaflag.equals("Top")) {
+//			if(ratingflag.equals("SelfRated")){
+//				orderingcriteriatopmap.put("SelfRated", userscoreservice.filteredmistopselfratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount()));
+//			}
+//			if(ratingflag.equals("ManagerRated")){
+//				orderingcriteriatopmap.put("ManagerRated", userscoreservice.filteredmistopmanagerratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount()));		
+//			}
+//			if(ratingflag.equals("PEDRated")){
+//				orderingcriteriatopmap.put("PEDRated", userscoreservice.filteredmistoppedratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount()));
+//			}
+//			filteredmislist.put("Top",orderingcriteriatopmap);
+//		}
+//
+//		if(criteriaflag.equals("Bottom")) {
+//			if(ratingflag.equals("SelfRated")){
+//				orderingcriteriabottommap.put("SelfRated", userscoreservice.filteredmisbottomselfratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount()));
+//			}
+//			if(ratingflag.equals("ManagerRated")){
+//				orderingcriteriabottommap.put("ManagerRated", userscoreservice.filteredmisbottommanagerratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount()));
+//			}
+//			if(ratingflag.equals("PEDRated")){
+//				orderingcriteriabottommap.put("PEDRated", userscoreservice.filteredmisbottompedratedlist(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getCount()));
+//			}
+//			filteredmislist.put("Bottom",orderingcriteriabottommap);
+//		}
+//		return filteredmislist;
+//	}
+//
+//	@PostMapping("getmissedscoringmislist")
+//	public Map<String,Object> getmissedscoringmislist(@RequestBody UserScore userscoreinput) {
+//		Map<String,Object> missedscorelist= new HashMap<String,Object>();
+//		missedscorelist.put("Self",userscoreservice.missedselfscoringmislist(userscoreinput.getYear(),userscoreinput.getQuarter_id()));
+//		missedscorelist.put("Manager",userscoreservice.missedmanagerscoringmislist(userscoreinput.getYear(),userscoreinput.getQuarter_id()));
+//		missedscorelist.put("PED",userscoreservice.missedselfscoringmislist(userscoreinput.getYear(),userscoreinput.getQuarter_id()));
+//		return missedscorelist;
+//	}
+//
+//	@PostMapping("getgapmislist")
+//	public Map<String,Object> getgapmislist(@RequestBody UserScore userscoreinput) {
+//		Map<String,Object> gapmislistlist= new HashMap<String,Object>();	
+//		gapmislistlist.put("Gapsize",userscoreservice.gapmislistAny(userscoreinput.getYear(),userscoreinput.getQuarter_id(),userscoreinput.getGap_size()));
+//		return gapmislistlist;
+//	}
+
+	    @PostMapping("hrunfreezeuser")
+		public ResponseEntity<String> hrunfreezeuser(@RequestBody Unfreeze unfreezeinput){
+			unfreezeservice.hrunfreezeuser(unfreezeinput.getYear(),unfreezeinput.getQuarter_id(),unfreezeinput.getUser_id(),unfreezeinput.getUnfreezefor(),unfreezeinput.getUnfreezedays(),unfreezeinput.getUnfreezedata(),unfreezeinput.getUnfreezeby());
+			return new ResponseEntity<String>("User has been Unfreezed by HR, Sucessfully...", HttpStatus.OK);
+	 }
+}

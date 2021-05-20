@@ -1,0 +1,95 @@
+package com.Service.Goals.Users.Entity;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.Service.Goals.Users.Repository.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+@Repository
+public class JdbcUserRepository implements UserDRepository {
+
+	//@Autowired
+	//public static JdbcTemplate jdbcTemplate;
+
+
+
+	public static void main(String[] args) {
+		//try{System.out.println(jdbcTemplate);
+		//JdbcUserRepository obj = new JdbcUserRepository();
+		//obj.callstoredProcedure("surendra@quantira.com");
+		//}catch(Exception e) {
+			//System.out.println(e.getMessage());
+		//}
+		
+			/*try {
+				statement.registerOutParameter(2, Types.VARCHAR);
+				statement.registerOutParameter(3, Types.VARCHAR);
+				statement.registerOutParameter(4, Types.VARCHAR);
+				statement.registerOutParameter(5, Types.VARCHAR);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}*/
+
+			/*statement.execute();
+			try {
+				String name= statement.getObject(2, String.class);
+				System.out.println(name);
+			}catch(Exception e) {
+				System.out.println(e.getMessage());
+			}
+			statement.close();*/
+		} 
+
+	
+
+	
+ 
+	public List getemployeebyEmailid(String email) {
+		List ulist=new ArrayList();
+		try {
+			String dbURL = "jdbc:sqlserver://EC2AMAZ-LBFN4AP;user=sa;database=PerformanceAppraisal";
+			String user = "sa";
+			String password = "Indxx@1234"; 
+			Connection conn = DriverManager.getConnection(dbURL, user, password);
+			
+			CallableStatement statement = conn.prepareCall("{call usp_userinsert(?)}");
+
+          
+			statement.setString(1, email);
+
+			System.out.println("{call usp_userinsert(?)}");
+			
+			
+			ResultSet rs=statement.executeQuery();
+			
+			System.out.println(rs);
+			while(rs.next()) {
+				String email_id=rs.getString("email_id");
+				String username=rs.getString("username");
+				
+				System.out.println(email_id);
+				System.out.println(username);
+				ulist.add(email_id);
+				ulist.add(username);
+			}}catch (Exception e) {
+				// TODO: handle exception
+				System.out.println(e.getMessage());
+			}
+			return ulist;
+	}
+	
+}
+

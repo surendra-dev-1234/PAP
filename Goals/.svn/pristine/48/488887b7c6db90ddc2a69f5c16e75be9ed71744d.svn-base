@@ -1,0 +1,173 @@
+package com.Service.Goals.Users.Entity;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class User {
+	
+	private int id;
+	
+	@Value(value="${default.string}")
+	private String rm;
+	
+	@Value(value="${default.string}")
+	private String year;
+	
+	@Value(value="${default.string}")
+	private String quaTAR;
+	
+	@Value(value="${default.int}")
+	private int RMID;
+	
+	@Value(value="${default.int}")
+	private int PDID;
+	
+	@Value(value="${default.string}")
+	private String email;
+	
+	@Value(value="${default.string}")
+	private String hr;
+	
+	@Value(value="${default.string}")
+	private String mis_user;
+	
+	@Value(value="${default.string}")
+	private String ped_user;
+	
+	@Value(value="${default.string}")
+	private String level1_user;
+	
+	@Value(value="${default.string}")
+	private String level2_user;
+	
+	@Value(value="${default.string}")
+	private String level3_user;
+	
+	@Value(value="${default.string}")
+	private String unfreez_user;
+
+	public String getRm() {
+		return rm;
+	}
+
+	public void setRm(String rm) {
+		this.rm = rm;
+	}
+
+	public String getYear() {
+		return year;
+	}
+
+	public void setYear(String year) {
+		this.year = year;
+	}
+
+	public String getQuaTAR() {
+		return quaTAR;
+	}
+
+	public void setQuaTAR(String quaTAR) {
+		this.quaTAR = quaTAR;
+	}
+
+	public int getRMID() {
+		return RMID;
+	}
+
+	public void setRMID(int rMID) {
+		RMID = rMID;
+	}
+
+	public int getPDID() {
+		return PDID;
+	}
+
+	public void setPDID(int pDID) {
+		PDID = pDID;
+	}
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getHr() {
+		return hr;
+	}
+
+	public void setHr(String hr) {
+		this.hr = hr;
+	}
+
+	public String getMis_user() {
+		return mis_user;
+	}
+
+	public void setMis_user(String mis_user) {
+		this.mis_user = mis_user;
+	}
+
+	public String getPed_user() {
+		return ped_user;
+	}
+
+	public void setPed_user(String ped_user) {
+		this.ped_user = ped_user;
+	}
+
+	public String getLevel1_user() {
+		return level1_user;
+	}
+
+	public void setLevel1_user(String level1_user) {
+		this.level1_user = level1_user;
+	}
+
+	public String getLevel2_user() {
+		return level2_user;
+	}
+
+	public void setLevel2_user(String level2_user) {
+		this.level2_user = level2_user;
+	}
+
+	public String getLevel3_user() {
+		return level3_user;
+	}
+
+	public void setLevel3_user(String level3_user) {
+		this.level3_user = level3_user;
+	}
+
+	
+	public String getUnfreez_user() {
+		return unfreez_user;
+	}
+
+	public void setUnfreez_user(String unfreez_user) {
+		this.unfreez_user = unfreez_user;
+	}
+
+	public User(int id, String email, String hr, String mis_user, String ped_user, String level1_user,
+			String level2_user, String level3_user) {
+		super();
+		this.id = id;
+		this.email = email;
+		this.hr = hr;
+		this.mis_user = mis_user;
+		this.ped_user = ped_user;
+		this.level1_user = level1_user;
+		this.level2_user = level2_user;
+		this.level3_user = level3_user;
+	}
+
+	public User() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+	
+	
+}

@@ -1,0 +1,10 @@
+package com.Service.Goals.Users.Entity;
+
+import java.util.List;
+
+import com.Service.Goals.Users.Controller.UserD;
+
+public interface UserDRepository {
+
+	Object callstoredProcedure(String email_id);
+}
