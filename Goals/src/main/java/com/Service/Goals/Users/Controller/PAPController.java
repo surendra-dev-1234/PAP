@@ -6,28 +6,24 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.Service.Goals.Users.Entity.FinalScore;
+
 import com.Service.Goals.Users.Entity.GoalDescription;
 import com.Service.Goals.Users.Entity.Quarter;
-import com.Service.Goals.Users.Entity.UpdateUserScore;
-import com.Service.Goals.Users.Entity.UserGoals;
-import com.Service.Goals.Users.Entity.UserScore;
+
 import com.Service.Goals.Users.Entity.Users;
 import com.Service.Goals.Users.Exception.UserEmptyNullException;
 import com.Service.Goals.Users.Exception.UserNotFoundException;
-import com.Service.Goals.Users.Repository.UserGoalsRepository;
+
 import com.Service.Goals.Users.Service.FinalScoreService;
 import com.Service.Goals.Users.Service.GoalDescriptionService;
 import com.Service.Goals.Users.Service.QuarterService;
 import com.Service.Goals.Users.Service.UnfreezeService;
-import com.Service.Goals.Users.Service.UserGoalsService;
 import com.Service.Goals.Users.Service.UserScoreService;
 import com.Service.Goals.Users.Service.UsersService;
 
